@@ -18,7 +18,8 @@
 
 	.equ	OUTPORT_INIT_VAL, 0           ; Valor inicial do porto de saida
 	
-	.equ	TIME_ADDR_MASK, 0b0111
+	.equ	TIME_IDX_MAX, 0x4
+	.equ	TIME_SHF_AMT, 0b0111
 	.equ	O7_MASK, 0x80
 	.equ	I7_MASK, 0x80
     .equ    TIME_IDX_MASK, 0x4
@@ -148,7 +149,7 @@ delay_end:
 ; Entradas:  -
 ; Saidas:    -
 ; Efeitos:   R0 - endereço da variável sysclk
-;			  R1 - valor novo da variável sysclk
+;			 R1 - valor novo da variável sysclk
 isr:
 	push r0
 	push r1
@@ -199,14 +200,15 @@ sysclk_addr:
 ; Efeitos:   R1 - máscara/limite de endereçamento do array de tempos
 fetch_sleep_duration:
     push lr
-    bl inport_read          ; lê índice do array de tempos
-    mov r1, #TIME_IDX_MASK
-    and r1, r0, r1          ; previne ultrapassagem do limite máximo (4) do índice 
-    bzs fsd_fetchtime
-    mov r1, r0              ; utiliza o valor lido se não ultrapassar
-fsd_lowerthan4:
+    bl inport_read          	; lê índice do array de tempos
+    lsr r0, r0, #TIME_SHF_AMT   ; filtra o índice do resto dos bits
+    mov r1, #TIME_IDX_MAX
+    cmp r0, r1  				; previne ultrapassagem do limite máximo (4) do índice,
+    blo fsd_fetchtime   		; comparando o índice lido com o limite
+    mov r1, r0              	; utiliza o valor lido se não ultrapassar
+fsd_fetchtime:
     ldr r0, times_addr
-    ldr r0, [r0, r1]        ; retorna o tempo de espera entre estados
+    ldr r0, [r0, r1]        	; retorna o tempo de espera entre estados
     pop pc
 
 times_addr:
