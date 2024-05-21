@@ -207,10 +207,10 @@ sysclk_addr:
 fetch_sleep_duration:
     push lr
     bl inport_read          	; lê índice do array de tempos
-    lsr r0, r0, #TIME_SHF_AMT   ; filtra o índice do resto dos bits
+    lsr r0, r0, #5              ; filtra o índice do resto dos bits
     mov r1, #TIME_IDX_MAX
     cmp r0, r1  				; previne ultrapassagem do limite máximo (4) do índice,
-    blo fsd_fetchtime   		; comparando o índice lido com o limite
+    bhs fsd_fetchtime   		; comparando o índice lido com o limite
     mov r1, r0              	; utiliza o valor lido se não ultrapassar
 fsd_fetchtime:
     ldr r0, times_addr
