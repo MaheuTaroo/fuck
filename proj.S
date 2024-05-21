@@ -45,10 +45,16 @@
 
 	; Outras definicoes
 	.equ	LED0_MASK, 1                  ; Mascara para o LED O0 da placa SDP16
+	.equ	TRAF_LIGHT_RED, 0x1
+	.equ	TRAF_LIGHT_GREEN, 0x2
+	.equ	PEDESTRIAN_LIGHT_RED, 0x4
+	.equ	PEDESTRIAN_LIGHT_GREEN, 0x8
+	.equ	MODE_RED, 0x10
+	.equ	MODE_GREEN, 0x20
 
-; *** Inicio de troco para completar ***
-	.equ	BLINK_TIME, 5                 ; ??
-; *** Fim de troco para completar ***
+	.equ	PEDESTRIAN_BUTTON, 0x1
+	.equ	CONFIG, 0x10
+	.equ	TIME_ADDR, 0xE0
 
 ; Seccao:    startup
 ; Descricao: Guarda o código de arranque do sistema

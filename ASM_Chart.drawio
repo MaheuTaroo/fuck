@@ -1,0 +1,112 @@
+<mxfile host="app.diagrams.net" modified="2024-05-21T10:07:08.521Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" etag="Sy1keVQa0h6h0a3QtEFR" version="24.4.4" type="device">
+  <diagram id="i2WykhCaVZXRe_rqQTYT" name="Page-1">
+    <mxGraphModel dx="1100" dy="543" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-38" value="" style="rounded=0;whiteSpace=wrap;html=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+          <mxGeometry x="150" y="20" width="550" height="820" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-8" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Zp_-aZVynQkVbPPxiM5z-2" target="Zp_-aZVynQkVbPPxiM5z-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-2" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;TRAFFIC_LIGHT_R&lt;/font&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;TRAFFIC_LIGHT_G&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;PEDESTRIAN_LIGHT_R&lt;/font&gt;&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;&lt;font style=&quot;font-size: 14px;&quot;&gt;MODE_G&lt;/font&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="180" y="60" width="160" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-15" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Zp_-aZVynQkVbPPxiM5z-3" target="Zp_-aZVynQkVbPPxiM5z-11">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-3" value="&lt;span style=&quot;font-size: 14px;&quot;&gt;edge rise&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 14px; background-color: initial;&quot;&gt;PEDESTRIAN_&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;BUTTON&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="180" y="300" width="159" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-9" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Zp_-aZVynQkVbPPxiM5z-7" target="Zp_-aZVynQkVbPPxiM5z-3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="Zp_-aZVynQkVbPPxiM5z-7" target="Zp_-aZVynQkVbPPxiM5z-28">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-7" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;CONFIG&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="212.5" y="200" width="95" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-10" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;F&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="262" y="260" width="20" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-17" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Zp_-aZVynQkVbPPxiM5z-11" target="Zp_-aZVynQkVbPPxiM5z-16">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-11" value="&lt;span style=&quot;font-size: 14px;&quot;&gt;TRAFFIC_LIGHT_R&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;PEDESTRIAN_LIGHT_G&lt;/span&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;&lt;br&gt;&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;MODE_G&lt;/span&gt;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="179" y="420" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-19" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Zp_-aZVynQkVbPPxiM5z-16" target="Zp_-aZVynQkVbPPxiM5z-18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-36" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="Zp_-aZVynQkVbPPxiM5z-16" target="Zp_-aZVynQkVbPPxiM5z-34">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-16" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;CONFIG&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="211.5" y="520" width="95" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-21" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Zp_-aZVynQkVbPPxiM5z-18">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="259" y="740" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-18" value="&lt;span style=&quot;font-size: 14px;&quot;&gt;edge rise&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 14px; background-color: initial;&quot;&gt;PEDESTRIAN_&lt;/span&gt;&lt;div&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;BUTTON&lt;/span&gt;&lt;/div&gt;&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="179.5" y="620" width="159" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-20" value="CROSSING_&lt;div&gt;TIME == 0&lt;/div&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="199" y="740" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-25" value="" style="endArrow=none;html=1;rounded=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;startArrow=classic;startFill=1;" edge="1" parent="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="260" y="60" as="sourcePoint" />
+            <mxPoint x="199" y="780" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="260" y="40" />
+              <mxPoint x="170" y="40" />
+              <mxPoint x="170" y="780" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-31" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Zp_-aZVynQkVbPPxiM5z-28" target="Zp_-aZVynQkVbPPxiM5z-30">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-28" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;TRAFFIC_LIGHT_R&lt;/font&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;TRAFFIC_LIGHT_G&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;PEDESTRIAN_LIGHT_G&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;MODE_R&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;MODE_G&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="510" y="260" width="160" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-30" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;CONFIG&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="542.5" y="400" width="95" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-32" value="" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="Zp_-aZVynQkVbPPxiM5z-30">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="550" y="430" as="sourcePoint" />
+            <mxPoint x="260" y="40" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="680" y="430" />
+              <mxPoint x="680" y="40" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-33" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="Zp_-aZVynQkVbPPxiM5z-34" target="Zp_-aZVynQkVbPPxiM5z-35">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-34" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;TRAFFIC_LIGHT_R&lt;/font&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;TRAFFIC_LIGHT_G&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;PEDESTRIAN_LIGHT_G&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;MODE_R&lt;/div&gt;&lt;div style=&quot;font-size: 14px;&quot;&gt;MODE_G&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="570" width="160" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-35" value="&lt;font style=&quot;font-size: 14px;&quot;&gt;CONFIG&lt;/font&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="382.5" y="710" width="95" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="Zp_-aZVynQkVbPPxiM5z-37" value="" style="endArrow=none;html=1;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="Zp_-aZVynQkVbPPxiM5z-35">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="480" y="740" as="sourcePoint" />
+            <mxPoint x="260" y="400" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="520" y="740" />
+              <mxPoint x="520" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
