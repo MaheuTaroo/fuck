@@ -54,7 +54,11 @@
 
 	.equ	PEDESTRIAN_BUTTON, 0x1
 	.equ	CONFIG, 0x10
+	.equ	CONFIG_OUTPUT, 0b111011
 	.equ	TIME_ADDR, 0xE0
+
+	.equ	BLINK_TIME, 5
+
 
 ; Seccao:    startup
 ; Descricao: Guarda o código de arranque do sistema
@@ -220,6 +224,35 @@ fsd_fetchtime:
 times_addr:
 	.word sleep_values
 
+
+; Rotina:    check_config
+; Descricao: Verifica se o bit de configuração foi ativado; caso
+;            esteja ativado, permanece em modo de configuração
+;            Interface exemplo: void check_config();
+; Entradas:  -
+; Saidas:    -
+; Efeitos:   R0 - leitura do bit de configuração
+; Notas:     TENTAR TORNAR NÃO BLOQUEANTE
+check_config:
+	push lr
+	push r4
+	mov r4, #CONFIG
+config:
+	bl inport_read
+	and r0, r0, r4
+	bzc config_end
+	mov r0, #CONFIG_OUTPUT
+	bl outport_write
+	mov r0, #BLINK_TIME
+	bl delay
+	mov r0, #0
+	bl outport_write
+	mov r0, #BLINK_TIME
+	bl delay
+	b config
+config_end:
+pop r4
+	pop pc
 
 
 
