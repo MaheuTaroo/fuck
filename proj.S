@@ -91,68 +91,30 @@ isr_addr:
 ; Saidas:    -
 ; Efeitos:   *** Para completar ***
 main:
-	mov	r0, #OUTPORT_INIT_VAL
-	bl	outport_init
-	mov	r0, #SYSCLK_FREQ
-	bl	sysclk_init
-	mrs	r0, cpsr
-	mov	r1, #CPSR_BIT_I
-	orr	r0, r0, r1
-	msr	cpsr, r0
-	mov r2, #1
-	mov r3, #TIME_ADDR_MASK
-	mov r4, #I7_MASK
-	ldr r5, times_addr
-	mov r6, #O7_MASK
-loop:
-	push r0
-loop_if:
-	bl inport_read
-	and r0, r0, r4
-	bzc loop_else
-	bl ptc_stop
-	mov r0, #O7_MASK
-	bl outport_write
-	b loop_if
-loop_else:
-	bl ptc_start
-	pop r0
-	mvn r0, r0
-	and r0, r0, r2
-	orr r0, r0, r6
-	bl outport_write
-	push r0
-	bl inport_read
-	and r0, r0, r3
-	ldrb r0, [r5, r0]
-	bl delay
-	pop r0
-	b	loop
+	bl check_config
+	bl get_state
 
-; Rotina:    delay
-; Descricao: Rotina bloqueante que realiza uma espera por teste sucessivo
-;            do valor da variável global sysclk. O tempo a esperar, em
-;            centenas de milissegundos, e passado em R0.
-;            Interface exemplo: void delay( uint16_t hms );
-; Entradas:  *** Para completar ***
-; Saidas:    -
-; Efeitos:   r1 - ticks recentes
-delay:
-	push lr
-	push r4
-	push r5
-	mov r4, r0
-	bl sysclk_get_ticks
-	mov r5, r0
-delay_loop:
-	bl sysclk_get_ticks
-	sub r0, r0, r5
-	cmp r0, r4
-	blo delay_loop
-delay_end:
-	pop r5
-	pop r4
-	pop pc
+wait_state:
+
+	b main
+ped_cross:
+	bl inport_read
+	mov r1, #PEDESTRIAN_BUTTON
+	and r1, r0, r1
+
+
+
+
+
+	bl inport_read
+	mov r2, #PEDESTRIAN_BUTTON
+	and r2, r0, r1
+	cmp r1, r2
+	bge ped_end
+	bl 
+	bl reset_time
+ped_end:
+	b main
 
 ; Rotina:    isr
 ; Descricao: Incrementa o valor da variável global sysclk.
@@ -208,7 +170,7 @@ sysclk_addr:
 ; Entradas:  -
 ; Saidas:    R0 - tempo de espera
 ; Efeitos:   R1 - máscara/limite de endereçamento do array de tempos
-fetch_sleep_duration:
+set_sleep_duration:
     push lr
     bl inport_read          	; lê índice do array de tempos
     lsr r0, r0, #5              ; filtra o índice do resto dos bits
@@ -216,14 +178,18 @@ fetch_sleep_duration:
     cmp r0, r1  				; previne ultrapassagem do limite máximo (4) do índice,
     bhs fsd_fetchtime   		; comparando o índice lido com o limite
     mov r1, r0              	; utiliza o valor lido se não ultrapassar
-fsd_fetchtime:
+ssd_fetchtime:
     ldr r0, times_addr
-    ldr r0, [r0, r1]        	; retorna o tempo de espera entre estados
+    ldrb r0, [r0, r1]        	; obtém o tempo de espera entre estados
+	ldr r1, sleep_val
+	strb r0, [r1]               ; salva o tempo de espera obtido
     pop pc
 
 times_addr:
 	.word sleep_values
 
+sleep_val_addr:
+	.word sleep_val
 
 ; Rotina:    check_config
 ; Descricao: Verifica se o bit de configuração foi ativado; caso
@@ -251,10 +217,26 @@ config:
 	bl delay
 	b config
 config_end:
-pop r4
+	pop r4
 	pop pc
 
+detect_ped_rise:
+	bl      inport_read
+	mov		r1, #PEDESTRIAN_BUTTON				
+	and		r1, r0, r1                  ; R1 = inport_val & PEDESTRIAN_BUTTON
+	mov		r0, #0                      ; rising_edge = FALSE
+	ldr		r2, edge_status_addr
+	bzs		detect_rise_l0              ; edge_now == 0
+	ldrb	r3, [r2]                    ; R3 = edge_last
+	and		r3, r3, r3
+	bzc		detect_rise_l0              ; edge_last == 0
+	mov		r0, #1                      ; rising_edge = TRUE
+detect_rise_l0:
+	strb	r1, [r2]					; edge_last = edge_now
+	mov		pc, lr						; return rising_edge
 
+edge_status_addr:
+	.word	edge_status
 
 ; Gestor de periférico para o porto de entrada
 ;
@@ -418,8 +400,14 @@ PTC_ADDR:
 ;
 	.data
 sleep_values:
-	.byte 10, 20, 30, 40, 50
+	.byte   10, 20, 30, 40, 50
+
+sleep_val:
+	.space  1
 	
+edge_status:
+	.byte   0
+
 outport_img:
 	.space	1
 
