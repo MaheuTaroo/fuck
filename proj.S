@@ -220,6 +220,59 @@ config_end:
 	pop r4
 	pop pc
 
+; Rotina:    get_state
+; Descricao: Retorna o identificador do estado atual
+;            Interface exemplo: uint8_t get_state();
+; Entradas:  -
+; Saidas:    R0 - estado atual
+; Efeitos:   -
+get_state:
+	ldr r0, state_addr
+	ldrb r0, [r0]
+	mov pc, lr
+
+; Rotina:    set_state
+; Descricao: Retorna o identificador do estado atual
+;            Interface exemplo: void set_state(uint8_t state);
+; Entradas:  R0 - estado a definir
+; Saidas:    -
+; Efeitos:   -
+set_state:
+	ldr r1, state_addr
+	strb r0, [r1]
+	mov pc, lr
+
+state_addr:
+	.word state_val
+
+; Rotina:    check_ped_press
+; Descricao: Transita de estado se houver alguma transição
+;            ascendente do botão de pedestre
+;            Interface exemplo: void check_ped_press();
+; Entradas:  -
+; Saidas:    -
+; Efeitos:   -
+; Notas:     INCOMPLETO
+check_ped_press:
+	push lr
+	bl detect_ped_rise
+	mov r1, #1
+	cmp r0, r1
+	bne no_press
+	mov r0, #1
+	bl set_state
+	; COMPLETAR AQUI: RESET TEMPO
+no_press:
+	pop pc
+
+
+; Rotina:    detect_ped_rise
+; Descricao: Indica se houve alguma transição ascendente do
+;            botão do pedestre
+;            Interface exemplo: uint_8 detect_ped_rise();
+; Entradas:  -
+; Saidas:    R0 - um valor que indica se houve transição ascendente
+; Efeitos:   -
 detect_ped_rise:
 	bl      inport_read
 	mov		r1, #PEDESTRIAN_BUTTON				
@@ -404,8 +457,11 @@ sleep_values:
 
 sleep_val:
 	.space  1
-	
+
 edge_status:
+	.byte   0
+
+state_val:
 	.byte   0
 
 outport_img:
