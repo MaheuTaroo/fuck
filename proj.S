@@ -127,9 +127,10 @@ isr:
 	push r1
 	ldr r0, PTC_ADDR1
 	strb r1, [r0, #PTC_TIR]
-	
-    ; CÓDIGO PARA INTERRUPÇÃO
-
+	ldr r1, sysclk_addr
+	ldrb r0, [r1]
+	add r0, r0, #1
+	strb r0, [r1]
 	pop r1
 	pop r0
 	movs pc, lr
