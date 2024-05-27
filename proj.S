@@ -91,12 +91,20 @@ isr_addr:
 ; Saidas:    -
 ; Efeitos:   *** Para completar ***
 main:
+	bl sysclk_init
+	mov r0, #0
+	bl outport_write
+	mrs	r0, cpsr
+	mov	r1, #CPSR_BIT_I
+	orr	r0, r0, r1
+	msr	cpsr, r0
+main_loop:
 	bl check_config
 	bl get_state
 
 wait_state:
 
-	b main
+	b main_loop
 ped_cross:
 	bl inport_read
 	mov r1, #PEDESTRIAN_BUTTON
@@ -111,10 +119,10 @@ ped_cross:
 	and r2, r0, r1
 	cmp r1, r2
 	bge ped_end
-	bl 
-	bl reset_time
+	;bl 
+	;bl reset_time
 ped_end:
-	b main
+	b main_loop
 
 ; Rotina:    isr
 ; Descricao: Incrementa o valor da variável global sysclk.
@@ -149,6 +157,8 @@ sysclk_init:
 	ldr r1, sysclk_addr
 	mov r2, #0
 	str r2, [r1]
+	mov r0, #SYSCLK_FREQ
+	bl ptc_init
 	pop pc
 
 ; Rotina:    sysclk_get_ticks
@@ -177,12 +187,12 @@ set_sleep_duration:
     lsr r0, r0, #5              ; filtra o índice do resto dos bits
     mov r1, #TIME_IDX_MAX
     cmp r0, r1  				; previne ultrapassagem do limite máximo (4) do índice,
-    bhs fsd_fetchtime   		; comparando o índice lido com o limite
+    bhs ssd_fetchtime   		; comparando o índice lido com o limite
     mov r1, r0              	; utiliza o valor lido se não ultrapassar
 ssd_fetchtime:
     ldr r0, times_addr
     ldrb r0, [r0, r1]        	; obtém o tempo de espera entre estados
-	ldr r1, sleep_val
+	ldr r1, sleep_val_addr
 	strb r0, [r1]               ; salva o tempo de espera obtido
     pop pc
 
@@ -203,21 +213,33 @@ sleep_val_addr:
 check_config:
 	push lr
 	push r4
+	push r5
+	push r6
+	push r7
 	mov r4, #CONFIG
+	bl sysclk_get_ticks
+	mov r5, r0
+	mov r6, #BLINK_TIME
+	mov r0, #CONFIG_OUTPUT
+	bl outport_write
+	mov r7, r0
 config:
 	bl inport_read
 	and r0, r0, r4
-	bzc config_end
-	mov r0, #CONFIG_OUTPUT
-	bl outport_write
-	mov r0, #BLINK_TIME
-	bl delay
-	mov r0, #0
-	bl outport_write
-	mov r0, #BLINK_TIME
-	bl delay
+	bzs config_end        ; verificar se o bit de config ainda está ativo; senão, sair da rotina
+	bl set_sleep_duration ; obter novo tempo de espera para peões
+	bl sysclk_get_ticks
+	sub r1, r0, r5
+	cmp r1, r6
+	blo config
+	mov r5, r0
+	mov r0, r7
+	bl outport_toggle_bits
 	b config
 config_end:
+	pop r7
+	pop r6
+	pop r5
 	pop r4
 	pop pc
 
@@ -312,36 +334,20 @@ inport_addr:
 ; Gestor de periférico para o porto de saída
 ;
 
-; Rotina:    outport_set_bits
-; Descricao: Atribui o valor logico 1 aos bits do porto de saida identificados
-;            com o valor 1 em R0. O valor dos outros bits nao e alterado.
-;            Interface exemplo: void outport_set_bits( uint8_t pins_mask );
+; Rotina:    outport_toggle_bits
+; Descricao: Transita entre valores lógicos nos bits do porto de saida
+;            identificados em R0. O valor dos outros bits nao e alterado.
+;            Interface exemplo: void outport_toggle_bits( uint8_t pins_mask );
 ; Entradas:  R0 - Mascara com a especificacao do indice dos bits a alterar.
 ; Saidas:    -
 ; Efeitos:   Altera o valor da variavel global outport_img.
-outport_set_bits:
+outport_toggle_bits:
 	push	lr
 	ldr	r1, outport_img_addr
 	ldrb	r2, [r1, #0]
-	orr	r0, r2, r0
-	strb	r0, [r1, #0]
-	bl	outport_write
-	pop	pc
-
-; Rotina:    outport_clear_bits
-; Descricao: Atribui o valor logico 0 aos bits do porto de saida identificados
-;            com o valor 1 em R0. O valor dos outros bits nao e alterado.
-;            Interface exemplo: void outport_clear_bits( uint8_t pins_mask );
-; Entradas:  R0 - Mascara com a especificacao do indice dos bits a alterar.
-; Saidas:    -
-; Efeitos:   Altera o valor da variavel global outport_img.
-outport_clear_bits:
-	push	lr
-	ldr	r1, outport_img_addr
-	ldrb	r2, [r1, #0]
-	mvn	r0, r0
+	mvn r2, r2
 	and	r0, r2, r0
-	strb	r0, [r1]
+	strb	r0, [r1, #0]
 	bl	outport_write
 	pop	pc
 
