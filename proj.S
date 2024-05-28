@@ -43,8 +43,10 @@
                                           ; que suporta a implementação do sysclk
 ; *** Fim de troco para completar ***
 
-	; Outras definicoes
-	.equ	LED0_MASK, 1                  ; Mascara para o LED O0 da placa SDP16
+	; Outras definicoes	
+	.equ	LED1_MASK, 3
+	.equ	CONFIG_MASK, 0x30
+
 	.equ	TRAF_LIGHT_RED, 0x1
 	.equ	TRAF_LIGHT_GREEN, 0x2
 	.equ	PEDESTRIAN_LIGHT_RED, 0x4
@@ -92,8 +94,7 @@ isr_addr:
 ; Efeitos:   *** Para completar ***
 main:
 	bl sysclk_init
-	mov r0, #0
-	bl outport_write
+	bl outport_init
 	mrs	r0, cpsr
 	mov	r1, #CPSR_BIT_I
 	orr	r0, r0, r1
@@ -101,27 +102,29 @@ main:
 main_loop:
 	bl check_config
 	bl get_state
-
+	and r0, r0, r0
+	bzc ped_cross
 wait_state:
-
+	bl sysclk_get_ticks
+	sub r1, r0, r5
+	cmp r1, r6
+	blo config
+	mov r5, r0
+	mov r0, r7
+	bl outport_toggle_bits
 	b main_loop
 ped_cross:
-	bl inport_read
-	mov r1, #PEDESTRIAN_BUTTON
-	and r1, r0, r1
-
-
-
-
-
-	bl inport_read
-	mov r2, #PEDESTRIAN_BUTTON
-	and r2, r0, r1
-	cmp r1, r2
-	bge ped_end
-	;bl 
-	;bl reset_time
+	bl check_ped_press
+	bl get_sleep_val
+	mov r4, r0
+	bl get_ref
+	mov r5, r0
+	bl sysclk_get_ticks
+	sub r0, r0, r5
+	blo ped_cross
 ped_end:
+	mov r0, #0
+	bl set_state
 	b main_loop
 
 ; Rotina:    isr
@@ -174,6 +177,11 @@ sysclk_get_ticks:
 
 sysclk_addr:
 	.word sysclk
+
+get_sleep_val:
+	ldr r0, sleep_val_addr
+	ldrb ro, [r0]
+	mov pc, lr
 
 ; Rotina:    fetch_sleep_duration
 ; Descricao: Devolve o tempo de espera entre estados
@@ -261,9 +269,11 @@ get_state:
 ; Saidas:    -
 ; Efeitos:   -
 set_state:
+	push lr
 	ldr r1, state_addr
 	strb r0, [r1]
-	mov pc, lr
+	bl outport_reset
+	pop pc
 
 state_addr:
 	.word state_val
@@ -275,7 +285,6 @@ state_addr:
 ; Entradas:  -
 ; Saidas:    -
 ; Efeitos:   -
-; Notas:     INCOMPLETO
 check_ped_press:
 	push lr
 	bl detect_ped_rise
@@ -284,10 +293,36 @@ check_ped_press:
 	bne no_press
 	mov r0, #1
 	bl set_state
-	; COMPLETAR AQUI: RESET TEMPO
+	bl sysclk_get_ticks
+	bl set_ref
 no_press:
 	pop pc
 
+; Rotina:    get_ref
+; Descricao: Obtém a referência temporal atual, em número de ticks
+;            Interface exemplo: uint16_t get_ref();
+; Entradas:  -
+; Saidas:    R0 - a referência temporal
+; Efeitos:   -
+get_ref:
+	ldr r0, ref_addr
+	ldr r0, [r0]
+	mov pc, lr
+
+; Rotina:    get_ref
+; Descricao: Armazena uma nova referência temporal atual, em número
+;            de ticks
+;            Interface exemplo: void set_ref(uint16_t new_ref);
+; Entradas:  R0 - a referência temporal
+; Saidas:    -
+; Efeitos:   -
+set_ref:
+	ldr r1, ref_addr
+	str r0, [r1]
+	mov pc, lr
+
+ref_addr:
+	.word ref_ticks
 
 ; Rotina:    detect_ped_rise
 ; Descricao: Indica se houve alguma transição ascendente do
@@ -313,6 +348,27 @@ detect_rise_l0:
 
 edge_status_addr:
 	.word	edge_status
+
+; Rotina:    blink
+; Descricao: Transita certos valores do porto de saída de acordo
+;            com a máscara passada
+;            Interface exemplo: void blink(uint8_t mask);
+; Entradas:  R0 - máscara a transitar
+; Saidas:    -
+; Efeitos:   -
+blink:
+	push lr
+	;bl check_config
+	;and r0, r0, r0
+	;mov r0, #LED1_MASK
+	;bzc	get_config_mask
+
+	
+	bl outport_toggle_bits
+	pop pc
+get_config_mask:
+	mov r0, #CONFIG_MASK
+	mov pc, lr
 
 ; Gestor de periférico para o porto de entrada
 ;
@@ -360,10 +416,25 @@ outport_toggle_bits:
 ; Efeitos:   Altera o valor da variavel global outport_img.
 outport_init:
 	push	lr
-	ldr	r1, outport_img_addr
-	strb	r0, [r1]
+	ldr r1, outport_img_addr
+	strb r0, [r1]
 	bl	outport_write
 	pop	pc
+
+; Rotina:    outport_reset
+; Descricao: Limpa o valor escrito no porto de saída e na sua imagem interna.
+;            Interface exemplo: void outport_reset();
+; Entradas:  -
+; Saidas:    -
+; Efeitos:   R0, R1: usados para alterar o valor da imagem do porto de saída
+outport_reset:
+	push lr
+	ldr r1, outport_img_addr
+	mov r0, #0
+	strb r0, [r1]
+	bl outport_write
+	pop pc
+
 
 outport_img_addr:
 	.word	outport_img
@@ -460,10 +531,13 @@ PTC_ADDR:
 ;
 	.data
 sleep_values:
-	.byte   10, 20, 30, 40, 50
+	.word   100, 200, 300, 400, 500
 
 sleep_val:
-	.space  1
+	.word   100
+
+ref_ticks:
+	.word   0
 
 edge_status:
 	.byte   0
