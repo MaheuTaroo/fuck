@@ -54,7 +54,8 @@
 
 	.equ	PEDESTRIAN_BUTTON, 0x1
 	.equ	CONFIG, 0x10
-	.equ	CONFIG_OUTPUT, 0b111011
+	.equ	PED_OUTPUT, 0b011011
+	.equ	CONFIG_OUTPUT, 0b1011
 	.equ	TIME_ADDR, 0xE0
 
 	.equ	BLINK_TIME, 5
@@ -103,7 +104,17 @@ main_loop:
 	bl get_state
 
 wait_state:
+<<<<<<< Updated upstream
 
+=======
+	bl sysclk_get_ticks
+	sub r1, r0, r5
+	cmp r1, r6
+	blo main_loop
+	mov r5, r0
+	mov r0, r7
+	bl outport_toggle_bits
+>>>>>>> Stashed changes
 	b main_loop
 ped_cross:
 	bl inport_read
@@ -175,6 +186,14 @@ sysclk_get_ticks:
 sysclk_addr:
 	.word sysclk
 
+<<<<<<< Updated upstream
+=======
+get_sleep_val:
+	ldr r0, sleep_val_addr
+	ldrb r0, [r0]
+	mov pc, lr
+
+>>>>>>> Stashed changes
 ; Rotina:    fetch_sleep_duration
 ; Descricao: Devolve o tempo de espera entre estados
 ;            Interface exemplo: uint16_t fetch_sleep_duration();
@@ -190,10 +209,11 @@ set_sleep_duration:
     bhs ssd_fetchtime   		; comparando o índice lido com o limite
     mov r1, r0              	; utiliza o valor lido se não ultrapassar
 ssd_fetchtime:
+	lsl r1, r1, #1
     ldr r0, times_addr
-    ldrb r0, [r0, r1]        	; obtém o tempo de espera entre estados
+    ldr r0, [r0, r1]        	; obtém o tempo de espera entre estados
 	ldr r1, sleep_val_addr
-	strb r0, [r1]               ; salva o tempo de espera obtido
+	str r0, [r1]               ; salva o tempo de espera obtido
     pop pc
 
 times_addr:
@@ -220,6 +240,8 @@ check_config:
 	bl sysclk_get_ticks
 	mov r5, r0
 	mov r6, #BLINK_TIME
+	mov r0, #0b110000
+	bl outport_write
 	mov r0, #CONFIG_OUTPUT
 	bl outport_write
 	mov r7, r0
