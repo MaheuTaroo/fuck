@@ -102,7 +102,8 @@ main:
 main_loop:
 	bl check_config
 	bl get_state
-
+	and r0, r0, r0
+	bzc ped_cross
 wait_state:
 	bl sysclk_get_ticks
 	sub r1, r0, r5
@@ -113,21 +114,14 @@ wait_state:
 	bl outport_toggle_bits
 	b main_loop
 ped_cross:
-	bl inport_read
-	mov r1, #PEDESTRIAN_BUTTON
-	and r1, r0, r1
-
-
-
-
-
-	bl inport_read
-	mov r2, #PEDESTRIAN_BUTTON
-	and r2, r0, r1
-	cmp r1, r2
-	bge ped_end
-	;bl 
-	;bl reset_time
+	bl check_ped_press
+	bl get_sleep_val
+	mov r4, r0
+	bl get_ref
+	mov r5, r0
+	bl sysclk_get_ticks
+	sub r0, r0, r5
+	blo ped_cross
 ped_end:
 	b main_loop
 
@@ -290,7 +284,6 @@ state_addr:
 ; Entradas:  -
 ; Saidas:    -
 ; Efeitos:   -
-; Notas:     INCOMPLETO
 check_ped_press:
 	push lr
 	bl detect_ped_rise
@@ -299,10 +292,36 @@ check_ped_press:
 	bne no_press
 	mov r0, #1
 	bl set_state
-	; COMPLETAR AQUI: RESET TEMPO
+	bl sysclk_get_ticks
+	bl set_ref
 no_press:
 	pop pc
 
+; Rotina:    get_ref
+; Descricao: Obtém a referência temporal atual, em número de ticks
+;            Interface exemplo: uint16_t get_ref();
+; Entradas:  -
+; Saidas:    R0 - a referência temporal
+; Efeitos:   -
+get_ref:
+	ldr r0, ref_addr
+	ldr r0, [r0]
+	mov pc, lr
+
+; Rotina:    get_ref
+; Descricao: Armazena uma nova referência temporal atual, em número
+;            de ticks
+;            Interface exemplo: void set_ref(uint16_t new_ref);
+; Entradas:  R0 - a referência temporal
+; Saidas:    -
+; Efeitos:   -
+set_ref:
+	ldr r1, ref_addr
+	str r0, [r1]
+	mov pc, lr
+
+ref_addr:
+	.word ref_ticks
 
 ; Rotina:    detect_ped_rise
 ; Descricao: Indica se houve alguma transição ascendente do
@@ -484,6 +503,9 @@ edge_status:
 
 state_val:
 	.byte   0
+
+ref_ticks:
+	.word   0
 
 outport_img:
 	.space	1
