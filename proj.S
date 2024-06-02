@@ -104,9 +104,6 @@ main_loop:
 	bl get_state
 
 wait_state:
-<<<<<<< Updated upstream
-
-=======
 	bl sysclk_get_ticks
 	sub r1, r0, r5
 	cmp r1, r6
@@ -114,7 +111,6 @@ wait_state:
 	mov r5, r0
 	mov r0, r7
 	bl outport_toggle_bits
->>>>>>> Stashed changes
 	b main_loop
 ped_cross:
 	bl inport_read
@@ -186,14 +182,11 @@ sysclk_get_ticks:
 sysclk_addr:
 	.word sysclk
 
-<<<<<<< Updated upstream
-=======
 get_sleep_val:
 	ldr r0, sleep_val_addr
 	ldrb r0, [r0]
 	mov pc, lr
 
->>>>>>> Stashed changes
 ; Rotina:    fetch_sleep_duration
 ; Descricao: Devolve o tempo de espera entre estados
 ;            Interface exemplo: uint16_t fetch_sleep_duration();
@@ -239,12 +232,12 @@ check_config:
 	mov r4, #CONFIG
 	bl sysclk_get_ticks
 	mov r5, r0
-	mov r6, #BLINK_TIME
 	mov r0, #0b110000
-	bl outport_write
-	mov r0, #CONFIG_OUTPUT
-	bl outport_write
-	mov r7, r0
+	mov r6, #CONFIG_OUTPUT
+	orr r0, r0, r6
+	bl outport_init
+	mov r7, r6
+	mov r6, #BLINK_TIME
 config:
 	bl inport_read
 	and r0, r0, r4
@@ -367,8 +360,7 @@ outport_toggle_bits:
 	push	lr
 	ldr	r1, outport_img_addr
 	ldrb	r2, [r1, #0]
-	mvn r2, r2
-	and	r0, r2, r0
+	eor	r0, r2, r0
 	strb	r0, [r1, #0]
 	bl	outport_write
 	pop	pc
