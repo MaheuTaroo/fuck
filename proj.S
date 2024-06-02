@@ -44,18 +44,16 @@
 ; *** Fim de troco para completar ***
 
 	; Outras definicoes
-	.equ	LED0_MASK, 1                  ; Mascara para o LED O0 da placa SDP16
-	.equ	TRAF_LIGHT_RED, 0x1
-	.equ	TRAF_LIGHT_GREEN, 0x2
-	.equ	PEDESTRIAN_LIGHT_RED, 0x4
-	.equ	PEDESTRIAN_LIGHT_GREEN, 0x8
-	.equ	MODE_RED, 0x10
-	.equ	MODE_GREEN, 0x20
-
 	.equ	PEDESTRIAN_BUTTON, 0x1
 	.equ	CONFIG, 0x10
-	.equ	PED_OUTPUT, 0b011011
-	.equ	CONFIG_OUTPUT, 0b1011
+	.equ	TRAFFIC_OUTPUT, 0b010111
+	.equ	TRAFFIC_BLINK, 0b11
+	.equ	PED_OUTPUT, 0b100111
+	.equ	PED_BLINK, 0b11
+	.equ	CONFIG_OUTPUT, 0b111011
+	.equ	CONFIG_BLINK, 0b1011
+	.equ	CROSS_OUTPUT, 0b101001
+	
 	.equ	TIME_ADDR, 0xE0
 
 	.equ	BLINK_TIME, 5
@@ -93,26 +91,31 @@ isr_addr:
 ; Efeitos:   *** Para completar ***
 main:
 	bl sysclk_init
-	mov r0, #0
+	mov r0, #PED_OUTPUT
 	bl outport_write
 	mrs	r0, cpsr
 	mov	r1, #CPSR_BIT_I
 	orr	r0, r0, r1
 	msr	cpsr, r0
+	mov r3, #BLINK_TIME
 main_loop:
 	bl check_config
+	bl check_ped_press
+	and r0, r0, r0
+	bzs if_state
+	mov r0, #CROSS_OUTPUT
+	bl outport_write
+	mov r0, #1
+	bl set_state
+	b ped_cross
+if_state:
 	bl get_state
 	and r0, r0, r0
-	bzc ped_cross
-wait_state:
-	bl sysclk_get_ticks
-	sub r1, r0, r5
-	cmp r1, r6
-	blo main_loop
-	mov r5, r0
-	mov r0, r7
-	bl outport_toggle_bits
-	b main_loop
+	bzs wait_state
+	mov r0, #CROSS_OUTPUT
+	bl outport_write
+	mov r0, #1
+	bl set_state
 ped_cross:
 	bl check_ped_press
 	bl get_sleep_val
@@ -122,7 +125,20 @@ ped_cross:
 	bl sysclk_get_ticks
 	sub r0, r0, r5
 	blo ped_cross
-ped_end:
+	mov r0, #0
+	bl set_state
+	mov r0, #PED_OUTPUT
+	bl outport_write
+	b main_loop
+wait_state:
+	bl get_ref
+	mov r1, r0
+	bl sysclk_get_ticks
+	sub r2, r0, r1
+	cmp r2, r3
+	blo main_loop
+	mov r0, #TRAFFIC_BLINK
+	bl outport_toggle_bits
 	b main_loop
 
 ; Rotina:    isr
@@ -226,12 +242,10 @@ check_config:
 	mov r4, #CONFIG
 	bl sysclk_get_ticks
 	mov r5, r0
-	mov r0, #0b110000
-	mov r6, #CONFIG_OUTPUT
-	orr r0, r0, r6
+	mov r0, #CONFIG_OUTPUT
 	bl outport_init
-	mov r7, r6
 	mov r6, #BLINK_TIME
+	mov r7, #CONFIG_BLINK
 config:
 	bl inport_read
 	and r0, r0, r4
@@ -250,6 +264,8 @@ config_end:
 	pop r6
 	pop r5
 	pop r4
+	mov r0, #PED_OUTPUT
+	bl outport_write
 	pop pc
 
 ; Rotina:    get_state
@@ -331,6 +347,7 @@ ref_addr:
 ; Saidas:    R0 - um valor que indica se houve transição ascendente
 ; Efeitos:   -
 detect_ped_rise:
+	push lr
 	bl      inport_read
 	mov		r1, #PEDESTRIAN_BUTTON				
 	and		r1, r0, r1                  ; R1 = inport_val & PEDESTRIAN_BUTTON
@@ -343,7 +360,7 @@ detect_ped_rise:
 	mov		r0, #1                      ; rising_edge = TRUE
 detect_rise_l0:
 	strb	r1, [r2]					; edge_last = edge_now
-	mov		pc, lr						; return rising_edge
+	pop 	pc					; return rising_edge
 
 edge_status_addr:
 	.word	edge_status

@@ -27,4 +27,4 @@ timer=PICO_Timer
 id=5
 databus=P16Low
 addrsel=FF40,FF7F
-clk=1000,Hz
+clk=100,Hz
