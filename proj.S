@@ -46,13 +46,11 @@
 	; Outras definicoes
 	.equ	PEDESTRIAN_BUTTON, 0x1
 	.equ	CONFIG, 0x10
-	.equ	TRAFFIC_OUTPUT, 0b010111
+	.equ	TRAFFIC_OUTPUT, 0b100111
 	.equ	TRAFFIC_BLINK, 0b11
-	.equ	PED_OUTPUT, 0b100111
-	.equ	PED_BLINK, 0b11
+	.equ	PED_OUTPUT, 0b101001
 	.equ	CONFIG_OUTPUT, 0b111011
 	.equ	CONFIG_BLINK, 0b1011
-	.equ	CROSS_OUTPUT, 0b101001
 	
 	.equ	TIME_ADDR, 0xE0
 
@@ -109,7 +107,7 @@ if_state:
 	and r0, r0, r0
 	bzs wait_state
 ped_state:
-	mov r0, #CROSS_OUTPUT
+	mov r0, #PED_OUTPUT
 	bl outport_write
 	mov r0, #1
 	bl set_state
