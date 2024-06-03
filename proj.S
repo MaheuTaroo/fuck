@@ -48,7 +48,7 @@
 	.equ	CONFIG, 0x10
 	.equ	TRAFFIC_OUTPUT, 0b100111
 	.equ	TRAFFIC_BLINK, 0b11
-	.equ	PED_OUTPUT, 0b101001
+	.equ	PED_OUTPUT, 0b101011
 	.equ	CONFIG_OUTPUT, 0b111011
 	.equ	CONFIG_BLINK, 0b1011
 	
@@ -89,8 +89,12 @@ isr_addr:
 ; Efeitos:   *** Para completar ***
 main:
 	bl sysclk_init
-	mov r0, #PED_OUTPUT
-	bl outport_write
+	mov r0, #0
+	bl set_state
+	bl sysclk_get_ticks
+	bl set_ref
+	mov r0, #TRAFFIC_OUTPUT
+	bl outport_init
 	mrs	r0, cpsr
 	mov	r1, #CPSR_BIT_I
 	orr	r0, r0, r1
@@ -108,7 +112,7 @@ if_state:
 	bzs wait_state
 ped_state:
 	mov r0, #PED_OUTPUT
-	bl outport_write
+	bl outport_init
 	mov r0, #1
 	bl set_state
 ped_cross:
@@ -123,7 +127,7 @@ ped_cross:
 	mov r0, #0
 	bl set_state
 	mov r0, #PED_OUTPUT
-	bl outport_write
+	bl outport_init
 	b main_loop
 wait_state:
 	bl get_ref
@@ -354,7 +358,7 @@ detect_ped_rise:
 	bzs		detect_rise_l0              ; edge_now == 0
 	ldrb	r3, [r2]                    ; R3 = edge_last
 	and		r3, r3, r3
-	bzc		detect_rise_l0              ; edge_last == 0
+	bzc		detect_rise_l0              ; edge_last != 0
 	mov		r0, #1                      ; rising_edge = TRUE
 detect_rise_l0:
 	strb	r1, [r2]					; edge_last = edge_now
