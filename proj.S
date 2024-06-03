@@ -1,8 +1,8 @@
-; Ficheiro:  ap05.S
-; Descricao: Programa de suporte a realizacao da 5a atividade laboratorial de
-;            Arquitetura de Computadores.
-; Autor:     Tiago M Dias (tiago.dias@isel.pt)
-; Data:      03-05-2024
+; Ficheiro:  proj.S
+; Descricao: Projeto final
+; Autor:     João Martins (a50055@alunos.isel.pt)
+;            Gonçalo Antunes (a49219@alunos.isel.pt)
+; Data:      03-06-2024
 
 ; Definicao dos valores dos simbolos utilizados no programa
 ;
@@ -16,19 +16,8 @@
 	; Definicoes do porto de saida
 	.equ	OUTPORT_ADDRESS, 0xFFC0       ; Endereco do porto de saida
 
-	.equ	OUTPORT_INIT_VAL, 0           ; Valor inicial do porto de saida
-	
-	.equ	TIME_IDX_MAX, 0x4
-	.equ	TIME_SHF_AMT, 0b0111
-	.equ	O7_MASK, 0x80
-	.equ	I7_MASK, 0x80
-    .equ    TIME_IDX_MASK, 0x4
-
-
 	; Definicoes do circuito pTC
-; *** Inicio de troco para completar ***
 	.equ	PTC_ADDRESS,  0xFF40          ; Endereco do circuito pTC
-; *** Fim de troco para completar ***
 
 	.equ	PTC_TCR, 0                    ; Deslocamento do registo TCR do pTC
 	.equ	PTC_TMR, 2                    ; Deslocamento do registo TMR do pTC
@@ -38,26 +27,19 @@
 	.equ	PTC_CMD_START, 0              ; Comando para iniciar a contagem no pTC
 	.equ	PTC_CMD_STOP, 1               ; Comando para parar a contagem no pTC
 
-; *** Inicio de troco para completar ***
 	.equ	SYSCLK_FREQ, 0x63             ; Intervalo de contagem do circuito pTC
                                           ; que suporta a implementação do sysclk
-; *** Fim de troco para completar ***
-
-	; Outras definicoes	
-	.equ	LED1_MASK, 3
-	.equ	CONFIG_MASK, 0x30
-
-	.equ	TRAF_LIGHT_RED, 0x1
-	.equ	TRAF_LIGHT_GREEN, 0x2
-	.equ	PEDESTRIAN_LIGHT_RED, 0x4
-	.equ	PEDESTRIAN_LIGHT_GREEN, 0x8
-	.equ	MODE_RED, 0x10
-	.equ	MODE_GREEN, 0x20
-
+										  
+	; Outras definicoes
 	.equ	PEDESTRIAN_BUTTON, 0x1
 	.equ	CONFIG, 0x10
+	.equ	TRAFFIC_OUTPUT, 0b100111
+	.equ	TRAFFIC_BLINK, 0b11
+	.equ	PED_OUTPUT, 0b101011
 	.equ	CONFIG_OUTPUT, 0b111011
-	.equ	TIME_ADDR, 0xE0
+	.equ	CONFIG_BLINK, 0b1011
+	
+	.equ	TIME_IDX_MAX, 0x4
 
 	.equ	BLINK_TIME, 5
 
@@ -94,25 +76,32 @@ isr_addr:
 ; Efeitos:   *** Para completar ***
 main:
 	bl sysclk_init
+	mov r0, #0
+	bl set_state
+	bl sysclk_get_ticks
+	bl set_ref
+	mov r0, #TRAFFIC_OUTPUT
 	bl outport_init
 	mrs	r0, cpsr
 	mov	r1, #CPSR_BIT_I
 	orr	r0, r0, r1
 	msr	cpsr, r0
+	mov r3, #BLINK_TIME
 main_loop:
 	bl check_config
+	bl check_ped_press
+	and r0, r0, r0
+	bzs if_state
+	b ped_state
+if_state:
 	bl get_state
 	and r0, r0, r0
-	bzc ped_cross
-wait_state:
-	bl sysclk_get_ticks
-	sub r1, r0, r5
-	cmp r1, r6
-	blo config
-	mov r5, r0
-	mov r0, r7
-	bl outport_toggle_bits
-	b main_loop
+	bzs wait_state
+ped_state:
+	mov r0, #PED_OUTPUT
+	bl outport_init
+	mov r0, #1
+	bl set_state
 ped_cross:
 	bl check_ped_press
 	bl get_sleep_val
@@ -122,9 +111,21 @@ ped_cross:
 	bl sysclk_get_ticks
 	sub r0, r0, r5
 	blo ped_cross
-ped_end:
 	mov r0, #0
 	bl set_state
+	mov r0, #PED_OUTPUT
+	bl outport_init
+	b main_loop
+wait_state:
+	bl get_ref
+	mov r1, r0
+	bl sysclk_get_ticks
+	sub r2, r0, r1
+	cmp r2, r3
+	blo main_loop
+	bl set_ref
+	mov r0, #TRAFFIC_BLINK
+	bl outport_toggle_bits
 	b main_loop
 
 ; Rotina:    isr
@@ -180,7 +181,7 @@ sysclk_addr:
 
 get_sleep_val:
 	ldr r0, sleep_val_addr
-	ldrb ro, [r0]
+	ldrb r0, [r0]
 	mov pc, lr
 
 ; Rotina:    fetch_sleep_duration
@@ -198,10 +199,11 @@ set_sleep_duration:
     bhs ssd_fetchtime   		; comparando o índice lido com o limite
     mov r1, r0              	; utiliza o valor lido se não ultrapassar
 ssd_fetchtime:
+	lsl r1, r1, #1
     ldr r0, times_addr
-    ldrb r0, [r0, r1]        	; obtém o tempo de espera entre estados
+    ldr r0, [r0, r1]        	; obtém o tempo de espera entre estados
 	ldr r1, sleep_val_addr
-	strb r0, [r1]               ; salva o tempo de espera obtido
+	str r0, [r1]               ; salva o tempo de espera obtido
     pop pc
 
 times_addr:
@@ -217,24 +219,26 @@ sleep_val_addr:
 ; Entradas:  -
 ; Saidas:    -
 ; Efeitos:   R0 - leitura do bit de configuração
-; Notas:     TENTAR TORNAR NÃO BLOQUEANTE
 check_config:
 	push lr
 	push r4
 	push r5
 	push r6
 	push r7
+	bl inport_read
 	mov r4, #CONFIG
+	and r0, r0, r4
+	bzs config_end        ; verificar se o bit de config ainda está ativo; senão, sair da rotina
 	bl sysclk_get_ticks
 	mov r5, r0
-	mov r6, #BLINK_TIME
 	mov r0, #CONFIG_OUTPUT
-	bl outport_write
-	mov r7, r0
+	bl outport_init
+	mov r6, #BLINK_TIME
+	mov r7, #CONFIG_BLINK
 config:
 	bl inport_read
 	and r0, r0, r4
-	bzs config_end        ; verificar se o bit de config ainda está ativo; senão, sair da rotina
+	bzs config_after      ; verificar se o bit de config ainda está ativo; senão, sair da rotina
 	bl set_sleep_duration ; obter novo tempo de espera para peões
 	bl sysclk_get_ticks
 	sub r1, r0, r5
@@ -244,6 +248,9 @@ config:
 	mov r0, r7
 	bl outport_toggle_bits
 	b config
+config_after:
+	mov r0, #TRAFFIC_OUTPUT
+	bl outport_init
 config_end:
 	pop r7
 	pop r6
@@ -269,11 +276,9 @@ get_state:
 ; Saidas:    -
 ; Efeitos:   -
 set_state:
-	push lr
 	ldr r1, state_addr
 	strb r0, [r1]
-	bl outport_reset
-	pop pc
+	mov pc, lr
 
 state_addr:
 	.word state_val
@@ -332,6 +337,7 @@ ref_addr:
 ; Saidas:    R0 - um valor que indica se houve transição ascendente
 ; Efeitos:   -
 detect_ped_rise:
+	push lr
 	bl      inport_read
 	mov		r1, #PEDESTRIAN_BUTTON				
 	and		r1, r0, r1                  ; R1 = inport_val & PEDESTRIAN_BUTTON
@@ -340,35 +346,14 @@ detect_ped_rise:
 	bzs		detect_rise_l0              ; edge_now == 0
 	ldrb	r3, [r2]                    ; R3 = edge_last
 	and		r3, r3, r3
-	bzc		detect_rise_l0              ; edge_last == 0
+	bzc		detect_rise_l0              ; edge_last != 0
 	mov		r0, #1                      ; rising_edge = TRUE
 detect_rise_l0:
 	strb	r1, [r2]					; edge_last = edge_now
-	mov		pc, lr						; return rising_edge
+	pop 	pc					; return rising_edge
 
 edge_status_addr:
 	.word	edge_status
-
-; Rotina:    blink
-; Descricao: Transita certos valores do porto de saída de acordo
-;            com a máscara passada
-;            Interface exemplo: void blink(uint8_t mask);
-; Entradas:  R0 - máscara a transitar
-; Saidas:    -
-; Efeitos:   -
-blink:
-	push lr
-	;bl check_config
-	;and r0, r0, r0
-	;mov r0, #LED1_MASK
-	;bzc	get_config_mask
-
-	
-	bl outport_toggle_bits
-	pop pc
-get_config_mask:
-	mov r0, #CONFIG_MASK
-	mov pc, lr
 
 ; Gestor de periférico para o porto de entrada
 ;
@@ -393,16 +378,15 @@ inport_addr:
 ; Rotina:    outport_toggle_bits
 ; Descricao: Transita entre valores lógicos nos bits do porto de saida
 ;            identificados em R0. O valor dos outros bits nao e alterado.
-;            Interface exemplo: void outport_toggle_bits( uint8_t pins_mask );
-; Entradas:  R0 - Mascara com a especificacao do indice dos bits a alterar.
+;            Interface exemplo: void outport_toggle_bits( uint8_t bit_mask );
+; Entradas:  R0 - Mascara com os bits a alterar.
 ; Saidas:    -
 ; Efeitos:   Altera o valor da variavel global outport_img.
 outport_toggle_bits:
 	push	lr
 	ldr	r1, outport_img_addr
 	ldrb	r2, [r1, #0]
-	mvn r2, r2
-	and	r0, r2, r0
+	eor	r0, r2, r0
 	strb	r0, [r1, #0]
 	bl	outport_write
 	pop	pc
@@ -416,25 +400,10 @@ outport_toggle_bits:
 ; Efeitos:   Altera o valor da variavel global outport_img.
 outport_init:
 	push	lr
-	ldr r1, outport_img_addr
-	strb r0, [r1]
+	ldr	r1, outport_img_addr
+	strb	r0, [r1]
 	bl	outport_write
 	pop	pc
-
-; Rotina:    outport_reset
-; Descricao: Limpa o valor escrito no porto de saída e na sua imagem interna.
-;            Interface exemplo: void outport_reset();
-; Entradas:  -
-; Saidas:    -
-; Efeitos:   R0, R1: usados para alterar o valor da imagem do porto de saída
-outport_reset:
-	push lr
-	ldr r1, outport_img_addr
-	mov r0, #0
-	strb r0, [r1]
-	bl outport_write
-	pop pc
-
 
 outport_img_addr:
 	.word	outport_img
@@ -533,11 +502,14 @@ PTC_ADDR:
 sleep_values:
 	.word   100, 200, 300, 400, 500
 
-sleep_val:
-	.word   100
-
 ref_ticks:
 	.word   0
+	
+sysclk:
+	.space	2
+
+sleep_val:
+	.word  100
 
 edge_status:
 	.byte   0
@@ -549,8 +521,6 @@ outport_img:
 	.space	1
 
 	.align
-sysclk:
-	.space	2
 
 ; Seccao:    stack
 ; Descricao: Implementa a pilha com o tamanho definido pelo simbolo STACK_SIZE
