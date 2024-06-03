@@ -103,15 +103,12 @@ main_loop:
 	bl check_ped_press
 	and r0, r0, r0
 	bzs if_state
-	mov r0, #CROSS_OUTPUT
-	bl outport_write
-	mov r0, #1
-	bl set_state
-	b ped_cross
+	b ped_state
 if_state:
 	bl get_state
 	and r0, r0, r0
 	bzs wait_state
+ped_state:
 	mov r0, #CROSS_OUTPUT
 	bl outport_write
 	mov r0, #1
@@ -239,7 +236,10 @@ check_config:
 	push r5
 	push r6
 	push r7
+	bl inport_read
 	mov r4, #CONFIG
+	and r0, r0, r4
+	bzs config_end        ; verificar se o bit de config ainda está ativo; senão, sair da rotina
 	bl sysclk_get_ticks
 	mov r5, r0
 	mov r0, #CONFIG_OUTPUT
