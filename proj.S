@@ -1,8 +1,8 @@
-; Ficheiro:  ap05.S
-; Descricao: Programa de suporte a realizacao da 5a atividade laboratorial de
-;            Arquitetura de Computadores.
-; Autor:     Tiago M Dias (tiago.dias@isel.pt)
-; Data:      03-05-2024
+; Ficheiro:  proj.S
+; Descricao: Projeto final
+; Autor:     João Martins (a50055@alunos.isel.pt)
+;            Gonçalo Antunes (a49219@alunos.isel.pt)
+; Data:      03-06-2024
 
 ; Definicao dos valores dos simbolos utilizados no programa
 ;
@@ -16,19 +16,8 @@
 	; Definicoes do porto de saida
 	.equ	OUTPORT_ADDRESS, 0xFFC0       ; Endereco do porto de saida
 
-	.equ	OUTPORT_INIT_VAL, 0           ; Valor inicial do porto de saida
-	
-	.equ	TIME_IDX_MAX, 0x4
-	.equ	TIME_SHF_AMT, 0b0111
-	.equ	O7_MASK, 0x80
-	.equ	I7_MASK, 0x80
-    .equ    TIME_IDX_MASK, 0x4
-
-
 	; Definicoes do circuito pTC
-; *** Inicio de troco para completar ***
 	.equ	PTC_ADDRESS,  0xFF40          ; Endereco do circuito pTC
-; *** Fim de troco para completar ***
 
 	.equ	PTC_TCR, 0                    ; Deslocamento do registo TCR do pTC
 	.equ	PTC_TMR, 2                    ; Deslocamento do registo TMR do pTC
@@ -38,11 +27,9 @@
 	.equ	PTC_CMD_START, 0              ; Comando para iniciar a contagem no pTC
 	.equ	PTC_CMD_STOP, 1               ; Comando para parar a contagem no pTC
 
-; *** Inicio de troco para completar ***
 	.equ	SYSCLK_FREQ, 0x63             ; Intervalo de contagem do circuito pTC
                                           ; que suporta a implementação do sysclk
-; *** Fim de troco para completar ***
-
+										  
 	; Outras definicoes
 	.equ	PEDESTRIAN_BUTTON, 0x1
 	.equ	CONFIG, 0x10
@@ -52,7 +39,7 @@
 	.equ	CONFIG_OUTPUT, 0b111011
 	.equ	CONFIG_BLINK, 0b1011
 	
-	.equ	TIME_ADDR, 0xE0
+	.equ	TIME_IDX_MAX, 0x4
 
 	.equ	BLINK_TIME, 5
 
@@ -136,6 +123,7 @@ wait_state:
 	sub r2, r0, r1
 	cmp r2, r3
 	blo main_loop
+	bl set_ref
 	mov r0, #TRAFFIC_BLINK
 	bl outport_toggle_bits
 	b main_loop
@@ -231,7 +219,6 @@ sleep_val_addr:
 ; Entradas:  -
 ; Saidas:    -
 ; Efeitos:   R0 - leitura do bit de configuração
-; Notas:     TENTAR TORNAR NÃO BLOQUEANTE
 check_config:
 	push lr
 	push r4
@@ -251,7 +238,7 @@ check_config:
 config:
 	bl inport_read
 	and r0, r0, r4
-	bzs config_end        ; verificar se o bit de config ainda está ativo; senão, sair da rotina
+	bzs config_after      ; verificar se o bit de config ainda está ativo; senão, sair da rotina
 	bl set_sleep_duration ; obter novo tempo de espera para peões
 	bl sysclk_get_ticks
 	sub r1, r0, r5
@@ -261,13 +248,14 @@ config:
 	mov r0, r7
 	bl outport_toggle_bits
 	b config
+config_after:
+	mov r0, #TRAFFIC_OUTPUT
+	bl outport_init
 config_end:
 	pop r7
 	pop r6
 	pop r5
 	pop r4
-	mov r0, #PED_OUTPUT
-	bl outport_write
 	pop pc
 
 ; Rotina:    get_state
@@ -390,8 +378,8 @@ inport_addr:
 ; Rotina:    outport_toggle_bits
 ; Descricao: Transita entre valores lógicos nos bits do porto de saida
 ;            identificados em R0. O valor dos outros bits nao e alterado.
-;            Interface exemplo: void outport_toggle_bits( uint8_t pins_mask );
-; Entradas:  R0 - Mascara com a especificacao do indice dos bits a alterar.
+;            Interface exemplo: void outport_toggle_bits( uint8_t bit_mask );
+; Entradas:  R0 - Mascara com os bits a alterar.
 ; Saidas:    -
 ; Efeitos:   Altera o valor da variavel global outport_img.
 outport_toggle_bits:
@@ -512,10 +500,16 @@ PTC_ADDR:
 ;
 	.data
 sleep_values:
-	.byte   10, 20, 30, 40, 50
+	.word   100, 200, 300, 400, 500
+
+ref_ticks:
+	.word   0
+	
+sysclk:
+	.space	2
 
 sleep_val:
-	.space  1
+	.word  100
 
 edge_status:
 	.byte   0
@@ -523,15 +517,10 @@ edge_status:
 state_val:
 	.byte   0
 
-ref_ticks:
-	.word   0
-
 outport_img:
 	.space	1
 
 	.align
-sysclk:
-	.space	2
 
 ; Seccao:    stack
 ; Descricao: Implementa a pilha com o tamanho definido pelo simbolo STACK_SIZE
