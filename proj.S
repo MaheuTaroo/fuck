@@ -35,7 +35,7 @@
 	.equ	CONFIG, 0x10
 	.equ	TRAFFIC_OUTPUT, 0b100111
 	.equ	TRAFFIC_BLINK, 0b11
-	.equ	PED_OUTPUT, 0b101011
+	.equ	PED_OUTPUT, 0b101001
 	.equ	CONFIG_OUTPUT, 0b111011
 	.equ	CONFIG_BLINK, 0b1011
 	
@@ -86,7 +86,7 @@ main:
 	mov	r1, #CPSR_BIT_I
 	orr	r0, r0, r1
 	msr	cpsr, r0
-	mov r3, #BLINK_TIME
+	mov r4, #BLINK_TIME
 main_loop:
 	bl check_config
 	bl check_ped_press
@@ -102,18 +102,26 @@ ped_state:
 	bl outport_init
 	mov r0, #1
 	bl set_state
-ped_cross:
-	bl check_ped_press
-	bl get_sleep_val
-	mov r4, r0
-	bl get_ref
-	mov r5, r0
+ped_reset:
 	bl sysclk_get_ticks
-	sub r0, r0, r5
+	bl set_ref
+ped_cross:
+	bl check_config
+	bl detect_ped_rise
+	mov r1, #1
+	cmp r0, r1
+	beq ped_reset
+	bl get_sleep_val
+	mov r5, r0
+	bl get_ref
+	mov r6, r0
+	bl sysclk_get_ticks
+	sub r0, r0, r6
+	cmp r0, r5
 	blo ped_cross
 	mov r0, #0
 	bl set_state
-	mov r0, #PED_OUTPUT
+	mov r0, #TRAFFIC_OUTPUT
 	bl outport_init
 	b main_loop
 wait_state:
@@ -121,7 +129,7 @@ wait_state:
 	mov r1, r0
 	bl sysclk_get_ticks
 	sub r2, r0, r1
-	cmp r2, r3
+	cmp r2, r4
 	blo main_loop
 	bl set_ref
 	mov r0, #TRAFFIC_BLINK
@@ -140,9 +148,9 @@ isr:
 	ldr r0, PTC_ADDR1
 	strb r1, [r0, #PTC_TIR]
 	ldr r1, sysclk_addr
-	ldrb r0, [r1]
+	ldr r0, [r1]
 	add r0, r0, #1
-	strb r0, [r1]
+	str r0, [r1]
 	pop r1
 	pop r0
 	movs pc, lr
@@ -222,13 +230,13 @@ sleep_val_addr:
 check_config:
 	push lr
 	push r4
-	push r5
-	push r6
-	push r7
 	bl inport_read
 	mov r4, #CONFIG
 	and r0, r0, r4
-	bzs config_end        ; verificar se o bit de config ainda está ativo; senão, sair da rotina
+	bzs noconfig        ; verificar se o bit de config está ativo; senão, sair da rotina
+	push r5
+	push r6
+	push r7       
 	bl sysclk_get_ticks
 	mov r5, r0
 	mov r0, #CONFIG_OUTPUT
@@ -238,7 +246,7 @@ check_config:
 config:
 	bl inport_read
 	and r0, r0, r4
-	bzs config_after      ; verificar se o bit de config ainda está ativo; senão, sair da rotina
+	bzs config_end        ; verificar se o bit de config ainda está ativo; senão, sair da rotina
 	bl set_sleep_duration ; obter novo tempo de espera para peões
 	bl sysclk_get_ticks
 	sub r1, r0, r5
@@ -248,13 +256,15 @@ config:
 	mov r0, r7
 	bl outport_toggle_bits
 	b config
-config_after:
+config_end:
 	mov r0, #TRAFFIC_OUTPUT
 	bl outport_init
-config_end:
 	pop r7
 	pop r6
 	pop r5
+	pop r4
+	pop pc
+noconfig:
 	pop r4
 	pop pc
 
@@ -303,32 +313,6 @@ check_ped_press:
 no_press:
 	pop pc
 
-; Rotina:    get_ref
-; Descricao: Obtém a referência temporal atual, em número de ticks
-;            Interface exemplo: uint16_t get_ref();
-; Entradas:  -
-; Saidas:    R0 - a referência temporal
-; Efeitos:   -
-get_ref:
-	ldr r0, ref_addr
-	ldr r0, [r0]
-	mov pc, lr
-
-; Rotina:    get_ref
-; Descricao: Armazena uma nova referência temporal atual, em número
-;            de ticks
-;            Interface exemplo: void set_ref(uint16_t new_ref);
-; Entradas:  R0 - a referência temporal
-; Saidas:    -
-; Efeitos:   -
-set_ref:
-	ldr r1, ref_addr
-	str r0, [r1]
-	mov pc, lr
-
-ref_addr:
-	.word ref_ticks
-
 ; Rotina:    detect_ped_rise
 ; Descricao: Indica se houve alguma transição ascendente do
 ;            botão do pedestre
@@ -354,6 +338,32 @@ detect_rise_l0:
 
 edge_status_addr:
 	.word	edge_status
+
+	; Rotina:    get_ref
+; Descricao: Obtém a referência temporal atual, em número de ticks
+;            Interface exemplo: uint16_t get_ref();
+; Entradas:  -
+; Saidas:    R0 - a referência temporal
+; Efeitos:   -
+get_ref:
+	ldr r0, ref_addr
+	ldr r0, [r0]
+	mov pc, lr
+
+; Rotina:    get_ref
+; Descricao: Armazena uma nova referência temporal atual, em número
+;            de ticks
+;            Interface exemplo: void set_ref(uint16_t new_ref);
+; Entradas:  R0 - a referência temporal
+; Saidas:    -
+; Efeitos:   -
+set_ref:
+	ldr r1, ref_addr
+	str r0, [r1]
+	mov pc, lr
+
+ref_addr:
+	.word ref_ticks
 
 ; Gestor de periférico para o porto de entrada
 ;
