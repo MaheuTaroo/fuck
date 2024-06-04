@@ -107,6 +107,9 @@ ped_reset:
 	bl set_ref
 ped_cross:
 	bl check_config
+	bl get_state
+	and r0, r0, r0
+	bzs ped_end
 	bl detect_ped_rise
 	mov r1, #1
 	cmp r0, r1
@@ -121,6 +124,7 @@ ped_cross:
 	blo ped_cross
 	mov r0, #0
 	bl set_state
+ped_end:
 	mov r0, #TRAFFIC_OUTPUT
 	bl outport_init
 	b main_loop
@@ -262,8 +266,8 @@ config_end:
 	pop r7
 	pop r6
 	pop r5
-	pop r4
-	pop pc
+	mov r0, #0
+	bl set_state
 noconfig:
 	pop r4
 	pop pc
@@ -522,7 +526,7 @@ sleep_val:
 	.word  100
 
 edge_status:
-	.byte   0
+	.byte   1
 
 state_val:
 	.byte   0
