@@ -1,8 +1,8 @@
-; Ficheiro:  proj.S
+; Ficheiro:  AC_ProjFinal_LEIC23D_G12.S
 ; Descricao: Projeto final
 ; Autor:     João Martins (a50055@alunos.isel.pt)
 ;            Gonçalo Antunes (a49219@alunos.isel.pt)
-; Data:      03-06-2024
+; Data:      05-06-2024
 
 ; Definicao dos valores dos simbolos utilizados no programa
 ;
@@ -310,7 +310,6 @@ check_ped_press:
 	mov r1, #1
 	cmp r0, r1
 	bne no_press
-	mov r0, #1
 	bl set_state
 	bl sysclk_get_ticks
 	bl set_ref
