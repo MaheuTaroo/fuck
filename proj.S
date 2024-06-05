@@ -193,7 +193,7 @@ sysclk_addr:
 
 get_sleep_val:
 	ldr r0, sleep_val_addr
-	ldrb r0, [r0]
+	ldr r0, [r0]
 	mov pc, lr
 
 ; Rotina:    fetch_sleep_duration
