@@ -248,6 +248,7 @@ check_config:
 	mov r6, #BLINK_TIME
 	mov r7, #CONFIG_BLINK
 config:
+	bl detect_ped_rise
 	bl inport_read
 	and r0, r0, r4
 	bzs config_end        ; verificar se o bit de config ainda está ativo; senão, sair da rotina
